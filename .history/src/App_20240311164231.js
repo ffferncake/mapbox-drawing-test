@@ -19,7 +19,7 @@ const App = () => {
     setUser(username);
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("username", username);
-  };  
+  };
 
   const handleLogout = () => {
     setUser(null);

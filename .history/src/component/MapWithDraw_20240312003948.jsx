@@ -81,8 +81,6 @@ export default function MapWithDraw() {
       const newLayers = drawnPolygons.map((poly) => ({
         ...poly,
         id: generateLayerId(), // Ensure each layer has a valid unique ID
-        sourceId: `source-${generateLayerId()}`, // Generate a unique source ID
-        layerId: `layer-${generateLayerId()}`, // Generate a unique layer ID
       }));
       setStoredLayers((prevLayers) => [...prevLayers, ...newLayers]);
 
@@ -95,32 +93,13 @@ export default function MapWithDraw() {
         return newVisibility;
       });
 
-      newLayers.forEach((layer) => {
-        // Add the source and layer to the map
-        map.current.addSource(layer.sourceId, {
-          type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: [layer],
-          },
-        });
-        map.current.addLayer({
-          id: layer.layerId,
-          source: layer.sourceId,
-          type: "fill",
-          paint: {
-            "fill-color": "#088",
-            "fill-opacity": 0.8,
-          },
-        });
-      });
-
       draw.current.deleteAll(); // Clear drawn polygons
     } else {
       console.log("No polygons drawn to save.");
     }
   };
 
+  // Function to toggle the visibility of a stored layer
   const toggleStoredLayer = (id) => {
     setVisibleLayers((prevState) => {
       const newVisibility = { ...prevState };
@@ -130,46 +109,29 @@ export default function MapWithDraw() {
         console.error(`Layer with ID ${id} not found.`);
         return prevState; // Return previous state if layer is not found
       }
-
-      const { sourceId, layerId } = layer;
-      const source = layer.source; // Get the source property from the layer object
-      if (!source) {
-        console.error(`Source object for layer with ID ${id} is not defined.`);
-        return prevState; // Return previous state if source is not defined
-      }
-
       if (!newVisibility[id]) {
         // Layer is invisible, remove it from the map
+        const { sourceId, layerId } = layer;
         if (map.current.getLayer(layerId)) {
           map.current.removeLayer(layerId);
-        } else {
-          console.error(
-            `Layer with ID ${layerId} does not exist in the map's style.`
-          );
         }
-
         if (map.current.getSource(sourceId)) {
           map.current.removeSource(sourceId);
-        } else {
-          console.error(
-            `Source with ID ${sourceId} does not exist in the map.`
-          );
         }
       } else {
-        // Layer is visible, add it back to the map
-        if (!source.type) {
-          console.error(
-            `Source object for layer with ID ${id} does not have a type property.`
-          );
-          return prevState; // Return previous state if source type is not defined
+        // Layer is visible, add it to the map
+        const { sourceId, layerId, source, type, paint } = layer;
+        if (!map.current.getSource(sourceId)) {
+          map.current.addSource(sourceId, source);
         }
-        map.current.addSource(sourceId, source);
-        map.current.addLayer({
-          id: layerId,
-          source: sourceId,
-          type: source.type,
-          paint: {}, // Assuming a default paint object
-        });
+        if (!map.current.getLayer(layerId)) {
+          map.current.addLayer({
+            id: layerId, // Ensure layerId is not empty
+            source: sourceId,
+            type,
+            paint,
+          });
+        }
       }
       return newVisibility;
     });
@@ -178,9 +140,9 @@ export default function MapWithDraw() {
   return (
     <div>
       <div ref={mapContainer} className="map-container" />
-      {/* <button onClick={toggleDrawMode}>
+      <button onClick={toggleDrawMode}>
         {drawEnabled ? "Disable Draw" : "Enable Draw"}
-      </button> */}
+      </button>
       <button onClick={saveLayer}>Save</button>
       {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>

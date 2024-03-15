@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import LoginPage from "./auth/LoginPage";
 import MapWithDraw from "./component/MapWithDraw";
 import Navbar from "./component/Navbar";
@@ -19,7 +19,7 @@ const App = () => {
     setUser(username);
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("username", username);
-  };  
+  };
 
   const handleLogout = () => {
     setUser(null);

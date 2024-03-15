@@ -132,11 +132,6 @@ export default function MapWithDraw() {
       }
 
       const { sourceId, layerId } = layer;
-      const source = layer.source; // Get the source property from the layer object
-      if (!source) {
-        console.error(`Source object for layer with ID ${id} is not defined.`);
-        return prevState; // Return previous state if source is not defined
-      }
 
       if (!newVisibility[id]) {
         // Layer is invisible, remove it from the map
@@ -157,6 +152,13 @@ export default function MapWithDraw() {
         }
       } else {
         // Layer is visible, add it back to the map
+        const { source } = layer;
+        if (!source) {
+          console.error(
+            `Source object for layer with ID ${id} is not defined.`
+          );
+          return prevState; // Return previous state if source is not defined
+        }
         if (!source.type) {
           console.error(
             `Source object for layer with ID ${id} does not have a type property.`
@@ -178,9 +180,9 @@ export default function MapWithDraw() {
   return (
     <div>
       <div ref={mapContainer} className="map-container" />
-      {/* <button onClick={toggleDrawMode}>
+      <button onClick={toggleDrawMode}>
         {drawEnabled ? "Disable Draw" : "Enable Draw"}
-      </button> */}
+      </button>
       <button onClick={saveLayer}>Save</button>
       {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>

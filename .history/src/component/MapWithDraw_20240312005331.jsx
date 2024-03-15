@@ -131,8 +131,7 @@ export default function MapWithDraw() {
         return prevState; // Return previous state if layer is not found
       }
 
-      const { sourceId, layerId } = layer;
-      const source = layer.source; // Get the source property from the layer object
+      const { sourceId, layerId, source } = layer;
       if (!source) {
         console.error(`Source object for layer with ID ${id} is not defined.`);
         return prevState; // Return previous state if source is not defined
@@ -178,9 +177,9 @@ export default function MapWithDraw() {
   return (
     <div>
       <div ref={mapContainer} className="map-container" />
-      {/* <button onClick={toggleDrawMode}>
+      <button onClick={toggleDrawMode}>
         {drawEnabled ? "Disable Draw" : "Enable Draw"}
-      </button> */}
+      </button>
       <button onClick={saveLayer}>Save</button>
       {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>

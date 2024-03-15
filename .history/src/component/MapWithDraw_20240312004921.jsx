@@ -130,46 +130,44 @@ export default function MapWithDraw() {
         console.error(`Layer with ID ${id} not found.`);
         return prevState; // Return previous state if layer is not found
       }
-
-      const { sourceId, layerId } = layer;
-      const source = layer.source; // Get the source property from the layer object
-      if (!source) {
-        console.error(`Source object for layer with ID ${id} is not defined.`);
-        return prevState; // Return previous state if source is not defined
-      }
-
+      const { sourceId, layerId, source } = layer;
       if (!newVisibility[id]) {
         // Layer is invisible, remove it from the map
         if (map.current.getLayer(layerId)) {
           map.current.removeLayer(layerId);
         } else {
-          console.error(
-            `Layer with ID ${layerId} does not exist in the map's style.`
-          );
+          console.error(`Layer with ID ${layerId} not found.`);
         }
-
         if (map.current.getSource(sourceId)) {
           map.current.removeSource(sourceId);
         } else {
-          console.error(
-            `Source with ID ${sourceId} does not exist in the map.`
-          );
+          console.error(`Source with ID ${sourceId} not found.`);
         }
       } else {
         // Layer is visible, add it back to the map
+        if (!source) {
+          console.error(
+            `Source object for layer with ID ${id} is not defined.`
+          );
+          return prevState; // Return previous state if source is not defined
+        }
         if (!source.type) {
           console.error(
             `Source object for layer with ID ${id} does not have a type property.`
           );
           return prevState; // Return previous state if source type is not defined
         }
-        map.current.addSource(sourceId, source);
-        map.current.addLayer({
-          id: layerId,
-          source: sourceId,
-          type: source.type,
-          paint: {}, // Assuming a default paint object
-        });
+        if (!map.current.getSource(sourceId)) {
+          map.current.addSource(sourceId, source);
+        }
+        if (!map.current.getLayer(layerId)) {
+          map.current.addLayer({
+            id: layerId,
+            source: sourceId,
+            type: source.type,
+            paint: {}, // Assuming a default paint object
+          });
+        }
       }
       return newVisibility;
     });
@@ -178,9 +176,9 @@ export default function MapWithDraw() {
   return (
     <div>
       <div ref={mapContainer} className="map-container" />
-      {/* <button onClick={toggleDrawMode}>
+      <button onClick={toggleDrawMode}>
         {drawEnabled ? "Disable Draw" : "Enable Draw"}
-      </button> */}
+      </button>
       <button onClick={saveLayer}>Save</button>
       {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>

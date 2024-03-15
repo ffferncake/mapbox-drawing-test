@@ -178,9 +178,9 @@ export default function MapWithDraw() {
   return (
     <div>
       <div ref={mapContainer} className="map-container" />
-      {/* <button onClick={toggleDrawMode}>
+      <button onClick={toggleDrawMode}>
         {drawEnabled ? "Disable Draw" : "Enable Draw"}
-      </button> */}
+      </button>
       <button onClick={saveLayer}>Save</button>
       {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>
