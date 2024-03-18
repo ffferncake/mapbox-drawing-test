@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 // import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MapboxDrawPro from "@map.ir/mapbox-gl-draw-geospatial-tools";
-import axios from "./axios";
 
 // import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
@@ -95,7 +94,6 @@ export default function MapWithDraw() {
         },
       }));
       setStoredLayers((prevLayers) => [...prevLayers, ...newLayers]);
-
       console.log(newLayers);
       // Initialize visibility state for the new layers
       setVisibleLayers((prevState) => {
@@ -194,8 +192,9 @@ export default function MapWithDraw() {
           (layer, index) =>
             visibleLayers[layer.id] && ( // Render if layer is visible
               <div key={layer.id}>
-                Polygon {index + 1}:{" "}
-                <pre>{JSON.stringify(layer.source.data, null, 2)}</pre>
+                {/* Polygon {index + 1}:{" "}
+                {JSON.stringify(layer.geometry.coordinates)} */}
+                {JSON.stringify(layer)}
               </div>
             )
         )}

@@ -1,10 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
-// import MapboxDraw from "@mapbox/mapbox-gl-draw";
-import MapboxDrawPro from "@map.ir/mapbox-gl-draw-geospatial-tools";
-import axios from "./axios";
-
-// import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
 
 mapboxgl.accessToken =
@@ -37,7 +34,7 @@ export default function MapWithDraw() {
         setZoom(map.current.getZoom().toFixed(2));
       });
 
-      draw.current = new MapboxDrawPro({
+      draw.current = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
           polygon: true,
@@ -71,7 +68,7 @@ export default function MapWithDraw() {
     setDrawEnabled(!drawEnabled);
   };
 
-  // Function to generate a unique ID for sourceId and layerId
+  // Function to generate a unique layer ID
   const generateLayerId = () => {
     return Math.random().toString(36).substring(7);
   };
@@ -83,20 +80,12 @@ export default function MapWithDraw() {
     if (drawnPolygons.length > 0) {
       const newLayers = drawnPolygons.map((poly) => ({
         ...poly,
-        id: generateLayerId(),
-        sourceId: `source-${generateLayerId()}`,
-        layerId: `layer-${generateLayerId()}`,
-        source: {
-          type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: [poly],
-          },
-        },
+        id: generateLayerId(), // Ensure each layer has a valid unique ID
+        sourceId: `source-${generateLayerId()}`, // Generate a unique source ID
+        layerId: `layer-${generateLayerId()}`, // Generate a unique layer ID
       }));
       setStoredLayers((prevLayers) => [...prevLayers, ...newLayers]);
 
-      console.log(newLayers);
       // Initialize visibility state for the new layers
       setVisibleLayers((prevState) => {
         const newVisibility = { ...prevState };
@@ -108,7 +97,13 @@ export default function MapWithDraw() {
 
       newLayers.forEach((layer) => {
         // Add the source and layer to the map
-        map.current.addSource(layer.sourceId, layer.source);
+        map.current.addSource(layer.sourceId, {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [layer],
+          },
+        });
         map.current.addLayer({
           id: layer.layerId,
           source: layer.sourceId,
@@ -130,7 +125,6 @@ export default function MapWithDraw() {
     setVisibleLayers((prevState) => {
       const newVisibility = { ...prevState };
       newVisibility[id] = !newVisibility[id]; // Toggle visibility
-
       const layer = storedLayers.find((layer) => layer.id === id);
       if (!layer) {
         console.error(`Layer with ID ${id} not found.`);
@@ -138,47 +132,90 @@ export default function MapWithDraw() {
       }
 
       const { sourceId, layerId } = layer;
+      const source = layer.source; // Get the source property from the layer object
+      if (!source) {
+        console.error(`Source object for layer with ID ${id} is not defined.`);
+        return prevState; // Return previous state if source is not defined
+      }
 
       if (!newVisibility[id]) {
-        // Layer is invisible, remove it from the map if it exists
+        // Layer is invisible, remove it from the map
         if (map.current.getLayer(layerId)) {
           map.current.removeLayer(layerId);
         } else {
-          // console.error(
-          //   `Layer with ID ${layerId} does not exist in the map's style.`
-          // );
+          console.error(
+            `Layer with ID ${layerId} does not exist in the map's style.`
+          );
         }
 
         if (map.current.getSource(sourceId)) {
           map.current.removeSource(sourceId);
         } else {
-          // console.error(
-          //   `Source with ID ${sourceId} does not exist in the map.`
-          // );
+          console.error(
+            `Source with ID ${sourceId} does not exist in the map.`
+          );
         }
       } else {
-        // Layer is visible, add it back to the map if source does not exist
-        if (!map.current.getSource(sourceId)) {
-          map.current.addSource(sourceId, layer.source);
-          map.current.addLayer({
-            id: layerId,
-            source: sourceId,
-            type: "fill",
-            paint: {
-              "fill-color": "#088",
-              "fill-opacity": 0.8,
-            },
-          });
-        } else {
-          console.warn(`Source with ID ${sourceId} already exists in the map.`);
+        // Layer is visible, add it back to the map
+        if (!source.type) {
+          console.error(
+            `Source object for layer with ID ${id} does not have a type property.`
+          );
+          return prevState; // Return previous state if source type is not defined
         }
+        map.current.addSource(sourceId, source);
+        map.current.addLayer({
+          id: layerId,
+          source: sourceId,
+          type: source.type,
+          paint: {}, // Assuming a default paint object
+        });
       }
       return newVisibility;
     });
   };
 
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageUrl = reader.result;
+      const image = new Image();
+      image.src = imageUrl;
+      image.onload = () => {
+        const markerElement = document.createElement("div");
+        markerElement.className = "custom-marker";
+        markerElement.style.backgroundImage = `url(${imageUrl})`;
+        markerElement.style.width = "40px";
+        markerElement.style.height = "40px";
+
+        const marker = new mapboxgl.Marker({
+          element: markerElement,
+          draggable: true,
+        })
+          .setLngLat([0, 0])
+          .addTo(map.current);
+
+        // Update marker position when dragged
+        marker.on("dragend", () => {
+          const lngLat = marker.getLngLat();
+          console.log("Marker dropped at:", lngLat);
+          // You can update your state or perform other actions here
+        });
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div>
+      <input
+        type="file"
+        accept="image/png, image/jpeg"
+        onChange={handleFileChange}
+      />
       <div ref={mapContainer} className="map-container" />
       {/* <button onClick={toggleDrawMode}>
         {drawEnabled ? "Disable Draw" : "Enable Draw"}
@@ -195,7 +232,7 @@ export default function MapWithDraw() {
             visibleLayers[layer.id] && ( // Render if layer is visible
               <div key={layer.id}>
                 Polygon {index + 1}:{" "}
-                <pre>{JSON.stringify(layer.source.data, null, 2)}</pre>
+                {JSON.stringify(layer.geometry.coordinates)}
               </div>
             )
         )}

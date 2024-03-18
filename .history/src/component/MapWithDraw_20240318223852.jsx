@@ -126,6 +126,7 @@ export default function MapWithDraw() {
     }
   };
 
+  
   const toggleStoredLayer = (id) => {
     setVisibleLayers((prevState) => {
       const newVisibility = { ...prevState };

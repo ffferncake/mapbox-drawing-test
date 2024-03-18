@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 // import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MapboxDrawPro from "@map.ir/mapbox-gl-draw-geospatial-tools";
-import axios from "./axios";
 
 // import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
@@ -12,8 +11,8 @@ mapboxgl.accessToken =
 
 export default function MapWithDraw() {
   const mapContainer = useRef(null);
-  const map = useRef(null);
-  const draw = useRef(null);
+  // const map = useRef(null);
+  // const draw = useRef(null);
   const [lng, setLng] = useState(100.49);
   const [lat, setLat] = useState(13.73);
   const [zoom, setZoom] = useState(11);
@@ -22,35 +21,66 @@ export default function MapWithDraw() {
   const [storedLayers, setStoredLayers] = useState([]); // State to store multiple layers
   const [visibleLayers, setVisibleLayers] = useState({}); // State to store visibility of layers
 
+  const map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v11',
+    center: [-91.874, 42.76], // starting position
+    zoom: 12, // starting zoom
+});
+
+  const draw = new MapboxDrawPro({
+    userProperties: true,
+    // aditional-tools
+    union: true,
+    copy: true,
+    buffer: true,
+    bufferSize: 0.5,
+    bufferUnit: 'kilometers',
+    bufferSteps: 64,
+    length: true,
+    lengthUnit: 'kilometers',
+    showLength: true,
+    area: true,
+    showArea: true,
+
+    // snap-mode
+    snap: true,
+    snapOptions: {
+        snapPx: 15,
+        snapToMidPoints: true,
+    },
+    guides: true,
+});
+
   useEffect(() => {
-    if (!map.current) {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/navigation-night-v1",
-        center: [lng, lat],
-        zoom: zoom,
-      });
+    // if (!map.current) {
+    //   map.current = new mapboxgl.Map({
+    //     container: mapContainer.current,
+    //     style: "mapbox://styles/mapbox/navigation-night-v1",
+    //     center: [lng, lat],
+    //     zoom: zoom,
+    //   });
 
-      map.current.on("move", () => {
-        setLng(map.current.getCenter().lng.toFixed(4));
-        setLat(map.current.getCenter().lat.toFixed(4));
-        setZoom(map.current.getZoom().toFixed(2));
-      });
+    //   map.current.on("move", () => {
+    //     setLng(map.current.getCenter().lng.toFixed(4));
+    //     setLat(map.current.getCenter().lat.toFixed(4));
+    //     setZoom(map.current.getZoom().toFixed(2));
+    //   });
 
-      draw.current = new MapboxDrawPro({
-        displayControlsDefault: false,
-        controls: {
-          polygon: true,
-          trash: true,
-        },
-      });
+    //   // draw.current = new MapboxDrawPro({
+    //   //   displayControlsDefault: false,
+    //   //   controls: {
+    //   //     polygon: true,
+    //   //     trash: true,
+    //   //   },
+    //   // });
 
-      map.current.addControl(draw.current);
+    //   map.current.addControl(draw.current);
 
-      map.current.on("draw.create", updatePolygons);
-      map.current.on("draw.delete", updatePolygons);
-      map.current.on("draw.update", updatePolygons);
-    }
+    //   map.current.on("draw.create", updatePolygons);
+    //   map.current.on("draw.delete", updatePolygons);
+    //   map.current.on("draw.update", updatePolygons);
+    // }
 
     return () => {
       map.current.off("draw.create", updatePolygons);
@@ -96,7 +126,6 @@ export default function MapWithDraw() {
       }));
       setStoredLayers((prevLayers) => [...prevLayers, ...newLayers]);
 
-      console.log(newLayers);
       // Initialize visibility state for the new layers
       setVisibleLayers((prevState) => {
         const newVisibility = { ...prevState };
@@ -144,22 +173,21 @@ export default function MapWithDraw() {
         if (map.current.getLayer(layerId)) {
           map.current.removeLayer(layerId);
         } else {
-          // console.error(
-          //   `Layer with ID ${layerId} does not exist in the map's style.`
-          // );
+          console.error(
+            `Layer with ID ${layerId} does not exist in the map's style.`
+          );
         }
 
         if (map.current.getSource(sourceId)) {
           map.current.removeSource(sourceId);
         } else {
-          // console.error(
-          //   `Source with ID ${sourceId} does not exist in the map.`
-          // );
+          console.error(
+            `Source with ID ${sourceId} does not exist in the map.`
+          );
         }
       } else {
         // Layer is visible, add it back to the map if source does not exist
-        if (!map.current.getSource(sourceId)) {
-          map.current.addSource(sourceId, layer.source);
+        if (!map.current.getLayer(layerId)) {
           map.current.addLayer({
             id: layerId,
             source: sourceId,
@@ -169,6 +197,14 @@ export default function MapWithDraw() {
               "fill-opacity": 0.8,
             },
           });
+        } else {
+          console.warn(
+            `Layer with ID ${layerId} already exists in the map's style.`
+          );
+        }
+
+        if (!map.current.getSource(sourceId)) {
+          map.current.addSource(sourceId, layer.source);
         } else {
           console.warn(`Source with ID ${sourceId} already exists in the map.`);
         }
@@ -195,7 +231,7 @@ export default function MapWithDraw() {
             visibleLayers[layer.id] && ( // Render if layer is visible
               <div key={layer.id}>
                 Polygon {index + 1}:{" "}
-                <pre>{JSON.stringify(layer.source.data, null, 2)}</pre>
+                {JSON.stringify(layer.geometry.coordinates)}
               </div>
             )
         )}

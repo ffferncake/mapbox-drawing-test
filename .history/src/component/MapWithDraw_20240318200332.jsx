@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 // import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MapboxDrawPro from "@map.ir/mapbox-gl-draw-geospatial-tools";
-import axios from "./axios";
 
 // import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
@@ -96,7 +95,6 @@ export default function MapWithDraw() {
       }));
       setStoredLayers((prevLayers) => [...prevLayers, ...newLayers]);
 
-      console.log(newLayers);
       // Initialize visibility state for the new layers
       setVisibleLayers((prevState) => {
         const newVisibility = { ...prevState };
@@ -144,17 +142,17 @@ export default function MapWithDraw() {
         if (map.current.getLayer(layerId)) {
           map.current.removeLayer(layerId);
         } else {
-          // console.error(
-          //   `Layer with ID ${layerId} does not exist in the map's style.`
-          // );
+          console.error(
+            `Layer with ID ${layerId} does not exist in the map's style.`
+          );
         }
 
         if (map.current.getSource(sourceId)) {
           map.current.removeSource(sourceId);
         } else {
-          // console.error(
-          //   `Source with ID ${sourceId} does not exist in the map.`
-          // );
+          console.error(
+            `Source with ID ${sourceId} does not exist in the map.`
+          );
         }
       } else {
         // Layer is visible, add it back to the map if source does not exist
@@ -195,7 +193,7 @@ export default function MapWithDraw() {
             visibleLayers[layer.id] && ( // Render if layer is visible
               <div key={layer.id}>
                 Polygon {index + 1}:{" "}
-                <pre>{JSON.stringify(layer.source.data, null, 2)}</pre>
+                {JSON.stringify(layer.geometry.coordinates)}
               </div>
             )
         )}

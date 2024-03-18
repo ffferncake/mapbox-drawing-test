@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 // import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MapboxDrawPro from "@map.ir/mapbox-gl-draw-geospatial-tools";
-import axios from "./axios";
 
 // import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
@@ -195,7 +194,7 @@ export default function MapWithDraw() {
             visibleLayers[layer.id] && ( // Render if layer is visible
               <div key={layer.id}>
                 Polygon {index + 1}:{" "}
-                <pre>{JSON.stringify(layer.source.data, null, 2)}</pre>
+                {JSON.stringify(layer.geometry.coordinates)}
               </div>
             )
         )}
