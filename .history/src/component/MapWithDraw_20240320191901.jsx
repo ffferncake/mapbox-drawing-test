@@ -128,47 +128,6 @@ export default function MapWithDraw() {
     }
   };
 
-  // const saveLayer = async () => {
-  //   const data = draw.current.getAll();
-  //   const drawnPolygons = data.features;
-  //   if (drawnPolygons.length > 0) {
-  //     const newLayers = drawnPolygons.map((poly) => ({
-  //       ...poly,
-  //       id: generateLayerId(),
-  //       sourceId: `source-${generateLayerId()}`,
-  //       layerId: `layer-${generateLayerId()}`,
-  //       source: {
-  //         type: "geojson",
-  //         data: {
-  //           type: "FeatureCollection",
-  //           features: [poly],
-  //         },
-  //       },
-  //     }));
-
-  //     try {
-  //       // Save the GeoJSON data to the backend
-  //       await axios.post("/geo_vector", {
-  //         geom: newLayers.geometry,
-  //         vector_id: newLayers.id,
-  //         layerId: newLayers.layerId,
-  //         source: newLayers.source,
-  //         sourceId: newLayers.sourceId,
-  //         vector_type_id: 1,
-  //         map_id : 1,
-  //         is_active : true
-  //       });
-
-  //       // Update the stored layers state and clear drawn polygons
-  //       setStoredLayers((prevLayers) => [...prevLayers, ...newLayers]);
-  //       draw.current.deleteAll();
-  //     } catch (error) {
-  //       console.error("Failed to save GeoJSON data:", error);
-  //     }
-  //   } else {
-  //     console.log("No polygons drawn to save.");
-  //   }
-  // };
 
   const toggleStoredLayer = (id) => {
     setVisibleLayers((prevState) => {

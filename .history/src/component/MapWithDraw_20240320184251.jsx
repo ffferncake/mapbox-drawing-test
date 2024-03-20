@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from "uuid";
 
 // import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
-import SideBar from "./SideBar";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiZmVybmNha2UiLCJhIjoiY2txajcyaWwwMDh2bjMwbngwM2hnaGdjZSJ9.w6HwEX8hDJzyYKOC7X7WHg";
@@ -40,7 +39,7 @@ export default function MapWithDraw() {
       });
 
       draw.current = new MapboxDrawPro({
-        displayControlsDefault: true,
+        displayControlsDefault: false,
         controls: {
           polygon: true,
           trash: true,
@@ -65,6 +64,12 @@ export default function MapWithDraw() {
   const updatePolygons = () => {
     const data = draw.current.getAll();
     setPolygons(data.features);
+  };
+
+  // Function to toggle draw mode
+  const toggleDrawMode = () => {
+    draw.current.changeMode(drawEnabled ? "simple_select" : "draw_polygon");
+    setDrawEnabled(!drawEnabled);
   };
 
   // Function to generate a unique ID for sourceId and layerId
@@ -248,32 +253,31 @@ export default function MapWithDraw() {
   };
 
   return (
-    <>
-      <button onClick={saveLayer}>Save</button>
-      {/* {storedLayers.map((layer, index) => (
-        <div key={layer.id}>
-          <button onClick={() => saveIndividualLayer(layer)}>
-            Save Layer {index + 1}
-          </button>
-          <button onClick={() => toggleStoredLayer(layer.id)}>
-            Toggle Layer {index + 1}
-          </button>
-          {visibleLayers[layer.id] && (
-            <div>
-              Polygon {index + 1}:{" "}
-              <pre>{JSON.stringify(layer.source.data, null, 2)}</pre>
-            </div>
-          )}
-        </div>
-      ))} */}
-      <div ref={mapContainer} className="map-container" />
-      <SideBar
-        storedLayers={storedLayers}
-        saveIndividualLayer={saveIndividualLayer}
-        toggleStoredLayer={toggleStoredLayer}
-        visibleLayers={visibleLayers}
-      />{" "}
-      {/* {storedLayers.map((layer, index) => (
+    <div>
+        {/* <button onClick={toggleDrawMode}>
+        {drawEnabled ? "Disable Draw" : "Enable Draw"}
+      </button> */}
+        <button style={{ zIndex: "990px" }} onClick={saveLayer}>
+          Save
+        </button>
+        {storedLayers.map((layer, index) => (
+          <div key={layer.id}>
+            <button onClick={() => saveIndividualLayer(layer)}>
+              Save Layer {index + 1}
+            </button>
+            <button onClick={() => toggleStoredLayer(layer.id)}>
+              Toggle Layer {index + 1}
+            </button>
+            {visibleLayers[layer.id] && (
+              <div>
+                Polygon {index + 1}:{" "}
+                <pre>{JSON.stringify(layer.source.data, null, 2)}</pre>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>
           Layer {index + 1}
         </button>
@@ -289,6 +293,9 @@ export default function MapWithDraw() {
             )
         )}
       </div> */}
-    </>
+            <div ref={mapContainer} className="map-container">
+
+      </div>
+    </div>
   );
 }

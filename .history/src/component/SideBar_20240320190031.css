@@ -1,0 +1,11 @@
+.sidebar {
+    position: absolute;
+    margin: 10px 20px 30px 10px;
+    width: 20%;
+    height: 80%;
+    top: 25px;
+    bottom: 0;
+    padding: 20px;
+    background-color: #283238;
+    overflow-y: scroll;
+  }

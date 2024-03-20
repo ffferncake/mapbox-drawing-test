@@ -67,6 +67,7 @@ export default function MapWithDraw() {
     setPolygons(data.features);
   };
 
+
   // Function to generate a unique ID for sourceId and layerId
   // const generateLayerId = () => {
   //   return Math.random().toString(36).substring(7);
@@ -250,7 +251,7 @@ export default function MapWithDraw() {
   return (
     <>
       <button onClick={saveLayer}>Save</button>
-      {/* {storedLayers.map((layer, index) => (
+      {storedLayers.map((layer, index) => (
         <div key={layer.id}>
           <button onClick={() => saveIndividualLayer(layer)}>
             Save Layer {index + 1}
@@ -265,14 +266,9 @@ export default function MapWithDraw() {
             </div>
           )}
         </div>
-      ))} */}
+      ))}
       <div ref={mapContainer} className="map-container" />
-      <SideBar
-        storedLayers={storedLayers}
-        saveIndividualLayer={saveIndividualLayer}
-        toggleStoredLayer={toggleStoredLayer}
-        visibleLayers={visibleLayers}
-      />{" "}
+      <SideBar />
       {/* {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>
           Layer {index + 1}

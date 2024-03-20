@@ -3,11 +3,9 @@ import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-load
 // import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MapboxDrawPro from "@map.ir/mapbox-gl-draw-geospatial-tools";
 import axios from "./axios";
-import { v4 as uuidv4 } from "uuid";
 
 // import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
-import SideBar from "./SideBar";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiZmVybmNha2UiLCJhIjoiY2txajcyaWwwMDh2bjMwbngwM2hnaGdjZSJ9.w6HwEX8hDJzyYKOC7X7WHg";
@@ -40,7 +38,7 @@ export default function MapWithDraw() {
       });
 
       draw.current = new MapboxDrawPro({
-        displayControlsDefault: true,
+        displayControlsDefault: false,
         controls: {
           polygon: true,
           trash: true,
@@ -67,13 +65,15 @@ export default function MapWithDraw() {
     setPolygons(data.features);
   };
 
-  // Function to generate a unique ID for sourceId and layerId
-  // const generateLayerId = () => {
-  //   return Math.random().toString(36).substring(7);
-  // };
+  // Function to toggle draw mode
+  const toggleDrawMode = () => {
+    draw.current.changeMode(drawEnabled ? "simple_select" : "draw_polygon");
+    setDrawEnabled(!drawEnabled);
+  };
+
   // Function to generate a unique ID for sourceId and layerId
   const generateLayerId = () => {
-    return uuidv4();
+    return Math.random().toString(36).substring(7);
   };
 
   // Function to save the current layer
@@ -84,10 +84,8 @@ export default function MapWithDraw() {
       const newLayers = drawnPolygons.map((poly) => ({
         ...poly,
         id: generateLayerId(),
-        // sourceId: `source-${generateLayerId()}`,
-        sourceId: `${generateLayerId()}`,
-        // layerId: `layer-${generateLayerId()}`,
-        layerId: `${generateLayerId()}`,
+        sourceId: `source-${generateLayerId()}`,
+        layerId: `layer-${generateLayerId()}`,
         source: {
           type: "geojson",
           data: {
@@ -96,8 +94,17 @@ export default function MapWithDraw() {
           },
         },
       }));
-
       setStoredLayers((prevLayers) => [...prevLayers, ...newLayers]);
+
+      console.log(newLayers);
+      // Initialize visibility state for the new layers
+      setVisibleLayers((prevState) => {
+        const newVisibility = { ...prevState };
+        newLayers.forEach((layer) => {
+          newVisibility[layer.id] = true;
+        });
+        return newVisibility;
+      });
 
       newLayers.forEach((layer) => {
         // Add the source and layer to the map
@@ -111,15 +118,6 @@ export default function MapWithDraw() {
             "fill-opacity": 0.8,
           },
         });
-      });
-
-      // Initialize visibility state for the new layers
-      setVisibleLayers((prevState) => {
-        const newVisibility = { ...prevState };
-        newLayers.forEach((layer) => {
-          newVisibility[layer.id] = true;
-        });
-        return newVisibility;
       });
 
       draw.current.deleteAll(); // Clear drawn polygons
@@ -222,35 +220,34 @@ export default function MapWithDraw() {
   };
 
   const saveIndividualLayer = async (layer) => {
-    console.log(layer.geometry);
+    console.log(layer.geometry)
     try {
-      const newLayer = { ...layer, key: uuidv4() }; // Add a unique key to the layer object
       await axios.post("/geo_vector", {
         geom: layer.geometry,
-        vector_id: newLayer.id,
-        layer_id: newLayer.layerId,
-        source: newLayer.source,
-        source_id: newLayer.sourceId,
+        vector_id: layer.id,
+        layer_id: layer.layerId,
+        source: layer.source,
+        source_id: layer.sourceId,
         vector_type_id: 1,
-        map_id: "a28ab3195c8cd344d8b8b2b463532eb3", //mock
-        is_active: true, //mock
+        map_id: 1,
+        is_active: true,
       });
-      alert("Data saved successfully!");
 
-      // Update the stored layers state with the newLayer
-      // setStoredLayers((prevLayers) => [...prevLayers, newLayer]);
+      // Update the stored layers state
+      setStoredLayers((prevLayers) => [...prevLayers, layer]);
     } catch (error) {
-      // console.error("Failed to save GeoJSON data:", error);
-      alert(
-        "Failed to save data. This data is already stored in the database."
-      );
+      console.error("Failed to save GeoJSON data:", error);
     }
   };
 
   return (
-    <>
+    <div>
+      <div ref={mapContainer} className="map-container" />
+      {/* <button onClick={toggleDrawMode}>
+        {drawEnabled ? "Disable Draw" : "Enable Draw"}
+      </button> */}
       <button onClick={saveLayer}>Save</button>
-      {/* {storedLayers.map((layer, index) => (
+      {storedLayers.map((layer, index) => (
         <div key={layer.id}>
           <button onClick={() => saveIndividualLayer(layer)}>
             Save Layer {index + 1}
@@ -265,14 +262,7 @@ export default function MapWithDraw() {
             </div>
           )}
         </div>
-      ))} */}
-      <div ref={mapContainer} className="map-container" />
-      <SideBar
-        storedLayers={storedLayers}
-        saveIndividualLayer={saveIndividualLayer}
-        toggleStoredLayer={toggleStoredLayer}
-        visibleLayers={visibleLayers}
-      />{" "}
+      ))}
       {/* {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>
           Layer {index + 1}
@@ -289,6 +279,6 @@ export default function MapWithDraw() {
             )
         )}
       </div> */}
-    </>
+    </div>
   );
 }
