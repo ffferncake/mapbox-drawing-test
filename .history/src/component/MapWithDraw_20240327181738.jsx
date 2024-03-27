@@ -25,7 +25,6 @@ export default function MapWithDraw() {
   const [storedLayers, setStoredLayers] = useState([]); // State to store multiple layers
   const [visibleLayers, setVisibleLayers] = useState({}); // State to store visibility of layers
   const [marker, setMarker] = useState(null);
-  const [imageSelected, setImageSelected] = useState(false);
 
   useEffect(() => {
     if (!map.current) {
@@ -40,6 +39,15 @@ export default function MapWithDraw() {
         setLng(map.current.getCenter().lng.toFixed(4));
         setLat(map.current.getCenter().lat.toFixed(4));
         setZoom(map.current.getZoom().toFixed(2));
+      });
+
+      map.current.on("click", (e) => {
+        if (!marker) {
+          const newMarker = new mapboxgl.Marker()
+            .setLngLat(e.lngLat)
+            .addTo(map.current); // Corrected to addTo(map.current)
+          setMarker(newMarker);
+        }
       });
 
       draw.current = new MapboxDrawPro({
@@ -57,13 +65,10 @@ export default function MapWithDraw() {
       map.current.on("draw.update", updatePolygons);
     }
 
-    map.current.on("click", handleClick);
-
     return () => {
       map.current.off("draw.create", updatePolygons);
       map.current.off("draw.delete", updatePolygons);
       map.current.off("draw.update", updatePolygons);
-      map.current.off("click", handleClick);
     };
   }, [lng, lat, zoom]);
 
@@ -253,69 +258,37 @@ export default function MapWithDraw() {
     }
   };
 
-  const handleClick = (e) => {
-    if (imageSelected && !marker) {
-      const newMarker = new mapboxgl.Marker()
-        .setLngLat(e.lngLat)
-        .addTo(map.current);
-      setMarker(newMarker);
-      setImageSelected(false); // Reset image selection state
-    }
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result;
+      // Remove any existing click event listener
+      map.current.off("click", handleMapClick);
+      // Add a new click event listener
+      map.current.on("click", handleMapClick(url));
+    };
+    reader.readAsDataURL(file);
   };
 
-  const createMarkerElement = (imageUrl, lngLat) => {
+  const handleMapClick = (imageUrl) => (clickEvent) => {
+    const { lngLat } = clickEvent;
+    const newMarker = new mapboxgl.Marker({
+      element: createMarkerElement(imageUrl),
+    })
+      .setLngLat(lngLat)
+      .addTo(map.current);
+    setMarker(newMarker);
+  };
+
+  const createMarkerElement = (imageUrl) => {
     const element = document.createElement("div");
     element.className = "custom-marker";
     element.style.backgroundImage = `url(${imageUrl})`;
     element.style.backgroundSize = "cover";
     element.style.width = "40px";
     element.style.height = "40px";
-
-    element.addEventListener("click", () => {
-      new mapboxgl.Popup()
-        .setLngLat(lngLat)
-        .setHTML(
-          `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
-            6
-          )}`
-        )
-        .addTo(map.current);
-    });
-
     return element;
-  };
-
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result;
-      const clickHandler = (clickEvent) => {
-        const { lngLat } = clickEvent;
-        const newMarker = new mapboxgl.Marker({
-          element: createMarkerElement(url, lngLat),
-        })
-          .setLngLat(lngLat)
-          .addTo(map.current);
-        setMarker(newMarker);
-
-        // Add a popup to the marker
-        const popup = new mapboxgl.Popup({ offset: 25 })
-          .setHTML(
-            `Latitude: ${lngLat.lat.toFixed(
-              6
-            )}, Longitude: ${lngLat.lng.toFixed(6)}`
-          )
-          .addTo(map.current);
-
-        // Attach popup to marker
-        newMarker.setPopup(popup);
-
-        map.current.off("click", clickHandler); // Remove the click event listener
-      };
-      map.current.on("click", clickHandler); // Add the click event listener
-    };
-    reader.readAsDataURL(file);
   };
 
   return (

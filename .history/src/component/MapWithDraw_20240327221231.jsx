@@ -253,16 +253,6 @@ export default function MapWithDraw() {
     }
   };
 
-  const handleClick = (e) => {
-    if (imageSelected && !marker) {
-      const newMarker = new mapboxgl.Marker()
-        .setLngLat(e.lngLat)
-        .addTo(map.current);
-      setMarker(newMarker);
-      setImageSelected(false); // Reset image selection state
-    }
-  };
-
   const createMarkerElement = (imageUrl, lngLat) => {
     const element = document.createElement("div");
     element.className = "custom-marker";
@@ -285,6 +275,19 @@ export default function MapWithDraw() {
     return element;
   };
 
+  const handleClick = (e) => {
+    if (imageSelected && !marker) {
+      const newMarker = new mapboxgl.Marker()
+        .setLngLat(e.lngLat)
+        .addTo(map.current);
+      setMarker(newMarker);
+      setImageSelected(false); // Reset image selection state
+  
+      // Store marker's coordinates in localStorage
+      localStorage.setItem("markerCoords", JSON.stringify(e.lngLat));
+    }
+  };
+  
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();
@@ -298,26 +301,30 @@ export default function MapWithDraw() {
           .setLngLat(lngLat)
           .addTo(map.current);
         setMarker(newMarker);
-
+  
+        // Store marker's coordinates and image URL in localStorage
+        localStorage.setItem("markerCoords", JSON.stringify(lngLat));
+        localStorage.setItem("markerImageUrl", url);
+  
         // Add a popup to the marker
         const popup = new mapboxgl.Popup({ offset: 25 })
           .setHTML(
-            `Latitude: ${lngLat.lat.toFixed(
+            `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
               6
-            )}, Longitude: ${lngLat.lng.toFixed(6)}`
+            )}`
           )
           .addTo(map.current);
-
+  
         // Attach popup to marker
         newMarker.setPopup(popup);
-
+  
         map.current.off("click", clickHandler); // Remove the click event listener
       };
       map.current.on("click", clickHandler); // Add the click event listener
     };
     reader.readAsDataURL(file);
   };
-
+  
   return (
     <>
       <button className="mapboxgl-ctrl mapboxgl-ctrl-group" onClick={saveLayer}>

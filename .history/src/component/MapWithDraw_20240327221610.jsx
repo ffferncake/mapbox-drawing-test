@@ -253,16 +253,6 @@ export default function MapWithDraw() {
     }
   };
 
-  const handleClick = (e) => {
-    if (imageSelected && !marker) {
-      const newMarker = new mapboxgl.Marker()
-        .setLngLat(e.lngLat)
-        .addTo(map.current);
-      setMarker(newMarker);
-      setImageSelected(false); // Reset image selection state
-    }
-  };
-
   const createMarkerElement = (imageUrl, lngLat) => {
     const element = document.createElement("div");
     element.className = "custom-marker";
@@ -285,6 +275,7 @@ export default function MapWithDraw() {
     return element;
   };
 
+  
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();

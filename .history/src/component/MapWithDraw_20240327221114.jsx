@@ -260,29 +260,10 @@ export default function MapWithDraw() {
         .addTo(map.current);
       setMarker(newMarker);
       setImageSelected(false); // Reset image selection state
+
+      // Store marker's coordinates in localStorage
+      localStorage.setItem("markerCoords", JSON.stringify(e.lngLat));
     }
-  };
-
-  const createMarkerElement = (imageUrl, lngLat) => {
-    const element = document.createElement("div");
-    element.className = "custom-marker";
-    element.style.backgroundImage = `url(${imageUrl})`;
-    element.style.backgroundSize = "cover";
-    element.style.width = "40px";
-    element.style.height = "40px";
-
-    element.addEventListener("click", () => {
-      new mapboxgl.Popup()
-        .setLngLat(lngLat)
-        .setHTML(
-          `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
-            6
-          )}`
-        )
-        .addTo(map.current);
-    });
-
-    return element;
   };
 
   const handleImageSelect = (e) => {
@@ -298,6 +279,10 @@ export default function MapWithDraw() {
           .setLngLat(lngLat)
           .addTo(map.current);
         setMarker(newMarker);
+
+        // Store marker's coordinates and image URL in localStorage
+        localStorage.setItem("markerCoords", JSON.stringify(lngLat));
+        localStorage.setItem("markerImageUrl", url);
 
         // Add a popup to the marker
         const popup = new mapboxgl.Popup({ offset: 25 })

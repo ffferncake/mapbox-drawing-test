@@ -263,25 +263,14 @@ export default function MapWithDraw() {
     }
   };
 
-  const createMarkerElement = (imageUrl, lngLat) => {
+  const createMarkerElement = (imageUrl) => {
+    console.log("Creating marker element");
     const element = document.createElement("div");
     element.className = "custom-marker";
     element.style.backgroundImage = `url(${imageUrl})`;
     element.style.backgroundSize = "cover";
     element.style.width = "40px";
     element.style.height = "40px";
-
-    element.addEventListener("click", () => {
-      new mapboxgl.Popup()
-        .setLngLat(lngLat)
-        .setHTML(
-          `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
-            6
-          )}`
-        )
-        .addTo(map.current);
-    });
-
     return element;
   };
 
@@ -290,30 +279,26 @@ export default function MapWithDraw() {
     const reader = new FileReader();
     reader.onload = () => {
       const url = reader.result;
-      const clickHandler = (clickEvent) => {
-        const { lngLat } = clickEvent;
-        const newMarker = new mapboxgl.Marker({
-          element: createMarkerElement(url, lngLat),
-        })
-          .setLngLat(lngLat)
-          .addTo(map.current);
-        setMarker(newMarker);
+      const markerElement = createMarkerElement(url);
+      const newMarker = new mapboxgl.Marker(markerElement)
+        .setLngLat([lng, lat])
+        .addTo(map.current);
 
-        // Add a popup to the marker
-        const popup = new mapboxgl.Popup({ offset: 25 })
+      markerElement.addEventListener("click", () => {
+        console.log("Marker clicked");
+        new mapboxgl.Popup()
+          .setLngLat(newMarker.getLngLat())
           .setHTML(
-            `Latitude: ${lngLat.lat.toFixed(
-              6
-            )}, Longitude: ${lngLat.lng.toFixed(6)}`
+            `Latitude: ${newMarker
+              .getLngLat()
+              .lat.toFixed(4)}, Longitude: ${newMarker
+              .getLngLat()
+              .lng.toFixed(4)}`
           )
           .addTo(map.current);
+      });
 
-        // Attach popup to marker
-        newMarker.setPopup(popup);
-
-        map.current.off("click", clickHandler); // Remove the click event listener
-      };
-      map.current.on("click", clickHandler); // Add the click event listener
+      setMarker(newMarker);
     };
     reader.readAsDataURL(file);
   };

@@ -253,6 +253,25 @@ export default function MapWithDraw() {
     }
   };
 
+  useEffect(() => {
+    map.current.on("load", () => {
+      // Add a marker at the specified coordinates
+      const marker = new mapboxgl.Marker()
+        .setLngLat([100.4194, 14.1749])
+        .addTo(map.current);
+
+      // Add a popup to the marker
+      const popup = new mapboxgl.Popup({ offset: 25 })
+        .setHTML(
+          "<h3>This is a marker popup</h3><p>Marker popup content goes here.</p>"
+        )
+        .addTo(map.current);
+
+      // Attach popup to marker
+      marker.setPopup(popup);
+    });
+  }, [map]);
+
   const handleClick = (e) => {
     if (imageSelected && !marker) {
       const newMarker = new mapboxgl.Marker()
@@ -271,16 +290,25 @@ export default function MapWithDraw() {
     element.style.width = "40px";
     element.style.height = "40px";
 
-    element.addEventListener("click", () => {
-      new mapboxgl.Popup()
-        .setLngLat(lngLat)
-        .setHTML(
-          `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
-            6
-          )}`
-        )
-        .addTo(map.current);
-    });
+    const popup = new mapboxgl.Popup({ offset: 25 })
+      .setHTML(
+        "<h3>This is a marker popup</h3><p>Marker popup content goes here.</p>"
+      )
+      .addTo(map.current);
+
+    // Attach popup to marker
+    element.setPopup(popup);
+
+    // element.addEventListener("click", () => {
+    //   new mapboxgl.Popup()
+    //     .setLngLat(lngLat)
+    //     .setHTML(
+    //       `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
+    //         6
+    //       )}`
+    //     )
+    //     .addTo(map.current);
+    // });
 
     return element;
   };
@@ -298,19 +326,6 @@ export default function MapWithDraw() {
           .setLngLat(lngLat)
           .addTo(map.current);
         setMarker(newMarker);
-
-        // Add a popup to the marker
-        const popup = new mapboxgl.Popup({ offset: 25 })
-          .setHTML(
-            `Latitude: ${lngLat.lat.toFixed(
-              6
-            )}, Longitude: ${lngLat.lng.toFixed(6)}`
-          )
-          .addTo(map.current);
-
-        // Attach popup to marker
-        newMarker.setPopup(popup);
-
         map.current.off("click", clickHandler); // Remove the click event listener
       };
       map.current.on("click", clickHandler); // Add the click event listener

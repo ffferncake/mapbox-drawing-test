@@ -263,25 +263,13 @@ export default function MapWithDraw() {
     }
   };
 
-  const createMarkerElement = (imageUrl, lngLat) => {
+  const createMarkerElement = (imageUrl) => {
     const element = document.createElement("div");
     element.className = "custom-marker";
     element.style.backgroundImage = `url(${imageUrl})`;
     element.style.backgroundSize = "cover";
     element.style.width = "40px";
     element.style.height = "40px";
-
-    element.addEventListener("click", () => {
-      new mapboxgl.Popup()
-        .setLngLat(lngLat)
-        .setHTML(
-          `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
-            6
-          )}`
-        )
-        .addTo(map.current);
-    });
-
     return element;
   };
 
@@ -293,24 +281,21 @@ export default function MapWithDraw() {
       const clickHandler = (clickEvent) => {
         const { lngLat } = clickEvent;
         const newMarker = new mapboxgl.Marker({
-          element: createMarkerElement(url, lngLat),
+          element: createMarkerElement(url),
         })
           .setLngLat(lngLat)
           .addTo(map.current);
+        newMarker.getElement().addEventListener("click", () => {
+          new mapboxgl.Popup()
+            .setLngLat(lngLat)
+            .setHTML(
+              `Latitude: ${lngLat.lat.toFixed(
+                6
+              )}, Longitude: ${lngLat.lng.toFixed(6)}`
+            )
+            .addTo(map.current);
+        });
         setMarker(newMarker);
-
-        // Add a popup to the marker
-        const popup = new mapboxgl.Popup({ offset: 25 })
-          .setHTML(
-            `Latitude: ${lngLat.lat.toFixed(
-              6
-            )}, Longitude: ${lngLat.lng.toFixed(6)}`
-          )
-          .addTo(map.current);
-
-        // Attach popup to marker
-        newMarker.setPopup(popup);
-
         map.current.off("click", clickHandler); // Remove the click event listener
       };
       map.current.on("click", clickHandler); // Add the click event listener

@@ -8,7 +8,6 @@ import { v4 as uuidv4 } from "uuid";
 // import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapWithDraw.css";
 import SideBar from "./SideBar";
-import SaveDBIcon from "../assets/db.svg";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiZmVybmNha2UiLCJhIjoiY2txajcyaWwwMDh2bjMwbngwM2hnaGdjZSJ9.w6HwEX8hDJzyYKOC7X7WHg";
@@ -24,13 +23,11 @@ export default function MapWithDraw() {
   const [drawEnabled, setDrawEnabled] = useState(true); // Toggle draw mode
   const [storedLayers, setStoredLayers] = useState([]); // State to store multiple layers
   const [visibleLayers, setVisibleLayers] = useState({}); // State to store visibility of layers
-  const [marker, setMarker] = useState(null);
-  const [imageSelected, setImageSelected] = useState(false);
 
   useEffect(() => {
     if (!map.current) {
       map.current = new mapboxgl.Map({
-        container: mapContainer.current,
+        container: mapContainer.current,    
         style: "mapbox://styles/mapbox/navigation-night-v1",
         center: [lng, lat],
         zoom: zoom,
@@ -57,13 +54,10 @@ export default function MapWithDraw() {
       map.current.on("draw.update", updatePolygons);
     }
 
-    map.current.on("click", handleClick);
-
     return () => {
       map.current.off("draw.create", updatePolygons);
       map.current.off("draw.delete", updatePolygons);
       map.current.off("draw.update", updatePolygons);
-      map.current.off("click", handleClick);
     };
   }, [lng, lat, zoom]);
 
@@ -253,76 +247,9 @@ export default function MapWithDraw() {
     }
   };
 
-  const handleClick = (e) => {
-    if (imageSelected && !marker) {
-      const newMarker = new mapboxgl.Marker()
-        .setLngLat(e.lngLat)
-        .addTo(map.current);
-      setMarker(newMarker);
-      setImageSelected(false); // Reset image selection state
-    }
-  };
-
-  const createMarkerElement = (imageUrl, lngLat) => {
-    const element = document.createElement("div");
-    element.className = "custom-marker";
-    element.style.backgroundImage = `url(${imageUrl})`;
-    element.style.backgroundSize = "cover";
-    element.style.width = "40px";
-    element.style.height = "40px";
-
-    element.addEventListener("click", () => {
-      new mapboxgl.Popup()
-        .setLngLat(lngLat)
-        .setHTML(
-          `Latitude: ${lngLat.lat.toFixed(6)}, Longitude: ${lngLat.lng.toFixed(
-            6
-          )}`
-        )
-        .addTo(map.current);
-    });
-
-    return element;
-  };
-
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result;
-      const clickHandler = (clickEvent) => {
-        const { lngLat } = clickEvent;
-        const newMarker = new mapboxgl.Marker({
-          element: createMarkerElement(url, lngLat),
-        })
-          .setLngLat(lngLat)
-          .addTo(map.current);
-        setMarker(newMarker);
-
-        // Add a popup to the marker
-        const popup = new mapboxgl.Popup({ offset: 25 })
-          .setHTML(
-            `Latitude: ${lngLat.lat.toFixed(
-              6
-            )}, Longitude: ${lngLat.lng.toFixed(6)}`
-          )
-          .addTo(map.current);
-
-        // Attach popup to marker
-        newMarker.setPopup(popup);
-
-        map.current.off("click", clickHandler); // Remove the click event listener
-      };
-      map.current.on("click", clickHandler); // Add the click event listener
-    };
-    reader.readAsDataURL(file);
-  };
-
   return (
     <>
-      <button className="mapboxgl-ctrl mapboxgl-ctrl-group" onClick={saveLayer}>
-        <img src={SaveDBIcon} alt="DB Icon" />
-      </button>
+      <button onClick={saveLayer}>Save</button>
       {/* {storedLayers.map((layer, index) => (
         <div key={layer.id}>
           <button onClick={() => saveIndividualLayer(layer)}>
@@ -340,13 +267,11 @@ export default function MapWithDraw() {
         </div>
       ))} */}
       <div ref={mapContainer} className="map-container" />
-      <input type="file" accept="image/*" onChange={handleImageSelect} />
       <SideBar
         storedLayers={storedLayers}
         saveIndividualLayer={saveIndividualLayer}
         toggleStoredLayer={toggleStoredLayer}
         visibleLayers={visibleLayers}
-        setVisibleLayers={setVisibleLayers}
       />{" "}
       {/* {storedLayers.map((layer, index) => (
         <button key={layer.id} onClick={() => toggleStoredLayer(layer.id)}>

@@ -292,26 +292,14 @@ export default function MapWithDraw() {
       const url = reader.result;
       const clickHandler = (clickEvent) => {
         const { lngLat } = clickEvent;
-        const newMarker = new mapboxgl.Marker({
+        const marker = new mapboxgl.Marker({
           element: createMarkerElement(url, lngLat),
         })
           .setLngLat(lngLat)
           .addTo(map.current);
-        setMarker(newMarker);
-
-        // Add a popup to the marker
-        const popup = new mapboxgl.Popup({ offset: 25 })
-          .setHTML(
-            `Latitude: ${lngLat.lat.toFixed(
-              6
-            )}, Longitude: ${lngLat.lng.toFixed(6)}`
-          )
-          .addTo(map.current);
-
-        // Attach popup to marker
-        newMarker.setPopup(popup);
-
+        setMarker(marker);
         map.current.off("click", clickHandler); // Remove the click event listener
+        console.log(lngLat);
       };
       map.current.on("click", clickHandler); // Add the click event listener
     };
